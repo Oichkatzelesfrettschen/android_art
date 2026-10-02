@@ -141,8 +141,9 @@ void MatchGlobRecursive(const std::vector<std::filesystem::path>& patterns,
       continue;
     }
     std::error_code ec2;
-    if (entry.is_regular_file(ec2) &&
-        std::any_of(patterns.begin(), patterns.end(), std::bind(FullMatch, _1, entry.path()))) {
+    // Match the path before stat follows an app's native-library symlink.
+    if (std::any_of(patterns.begin(), patterns.end(), std::bind(FullMatch, _1, entry.path())) &&
+        entry.is_regular_file(ec2)) {
       results->push_back(entry.path());
     }
     if (ec2) {
