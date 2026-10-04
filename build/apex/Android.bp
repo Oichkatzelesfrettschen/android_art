@@ -69,6 +69,13 @@ apex_defaults {
     defaults: ["s-launched-apex-module"],
 
     manifest: "manifest-art.json",
+    // The version's last digit marks an ART whose dex2oat instruction-set
+    // feature table differs from the release with the same default version
+    // (krait drops atomic_ldrd_strd). odrefresh keeps on-device boot and
+    // system server artifacts until the ART APEX version changes, so the
+    // distinct version makes the first boot after a flash recompile them
+    // with this table.
+    variant_version: "1",
     key: "com.android.art.key",
     certificate: ":com.android.art.certificate",
     bootclasspath_fragments: ["art-bootclasspath-fragment"],
