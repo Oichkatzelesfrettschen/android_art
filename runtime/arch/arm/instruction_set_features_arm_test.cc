@@ -30,9 +30,9 @@ TEST(ArmInstructionSetFeaturesTest, ArmFeaturesFromVariant) {
   ASSERT_EQ(krait_features->GetInstructionSet(), InstructionSet::kArm);
   EXPECT_TRUE(krait_features->Equals(krait_features.get()));
   EXPECT_TRUE(krait_features->AsArmInstructionSetFeatures()->HasDivideInstruction());
-  EXPECT_TRUE(krait_features->AsArmInstructionSetFeatures()->HasAtomicLdrdAndStrd());
-  EXPECT_STREQ("div,atomic_ldrd_strd,-armv8a", krait_features->GetFeatureString().c_str());
-  EXPECT_EQ(krait_features->AsBitmap(), 3U);
+  EXPECT_FALSE(krait_features->AsArmInstructionSetFeatures()->HasAtomicLdrdAndStrd());
+  EXPECT_STREQ("div,-atomic_ldrd_strd,-armv8a", krait_features->GetFeatureString().c_str());
+  EXPECT_EQ(krait_features->AsBitmap(), 1U);
 
   // Build features for a 32-bit ARM kryo processor.
   std::unique_ptr<const InstructionSetFeatures> kryo_features(

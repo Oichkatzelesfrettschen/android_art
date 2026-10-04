@@ -84,13 +84,14 @@ ArmFeaturesUniquePtr ArmInstructionSetFeatures::FromVariant(
                                                   arraysize(arm_variants_with_div),
                                                   variant);
 
-  // Look for variants that have LPAE support.
+  // Look for variants that have LPAE support, under which an aligned LDRD/STRD
+  // is single-copy atomic. Krait implements no LPAE (ID_MMFR0[3:0] reads 4 on
+  // MSM8974, long descriptors need 5), so its 64-bit atomics keep LDREXD/STREXD.
   static const char* arm_variants_with_lpae[] = {
       "cortex-a7",
       "cortex-a12",
       "cortex-a15",
       "cortex-a17",
-      "krait",
   };
   bool has_atomic_ldrd_strd = has_armv8a || FindVariantInArray(arm_variants_with_lpae,
                                                                arraysize(arm_variants_with_lpae),
