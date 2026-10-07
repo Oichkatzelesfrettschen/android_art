@@ -29,6 +29,9 @@
 #endif
 
 #include <android-base/logging.h>
+#if defined(ART_TARGET_ANDROID)
+#include <android-base/properties.h>
+#endif
 #include <android-base/unique_fd.h>
 
 #include "macros.h"
@@ -48,7 +51,7 @@ namespace art {
 
 #if defined(__NR_memfd_create)
 
-int memfd_create(const char* name, unsigned int flags) {
+static bool KernelSupportsMemfdCreate() {
   // Check kernel version supports memfd_create(). Some older kernels segfault executing
   // memfd_create() rather than returning ENOSYS (b/116769556).
   static constexpr int kRequiredMajor = 3;
@@ -57,8 +60,25 @@ int memfd_create(const char* name, unsigned int flags) {
   int major, minor;
   if (uname(&uts) != 0 ||
       strcmp(uts.sysname, "Linux") != 0 ||
-      sscanf(uts.release, "%d.%d", &major, &minor) != 2 ||
-      (major < kRequiredMajor || (major == kRequiredMajor && minor < kRequiredMinor))) {
+      sscanf(uts.release, "%d.%d", &major, &minor) != 2) {
+    return false;
+  }
+  if (major > kRequiredMajor || (major == kRequiredMajor && minor >= kRequiredMinor)) {
+    return true;
+  }
+#if defined(ART_TARGET_ANDROID)
+  // An older kernel that carries the memfd_create backport extends its syscall table past
+  // __NR_memfd_create, so the call returns instead of trapping; the device declares the
+  // backport through this property.
+  return ::android::base::GetBoolProperty("ro.kernel.memfd_create.supported", false);
+#else
+  return false;
+#endif
+}
+
+int memfd_create(const char* name, unsigned int flags) {
+  static const bool kernel_supports_memfd_create = KernelSupportsMemfdCreate();
+  if (!kernel_supports_memfd_create) {
     errno = ENOSYS;
     return -1;
   }
